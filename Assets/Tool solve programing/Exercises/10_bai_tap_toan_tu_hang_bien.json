@@ -1,0 +1,380 @@
+{
+  "exercises": [
+    {
+      "id": "bai-1-cong-hai-so",
+      "title": "Bài 1 - Cộng hai số",
+      "description": "Viết hàm public static object Main(List<object> input). input[0] và input[1] là int. Hãy tạo biến a, b rồi trả về tổng a + b.",
+      "testMode": "main",
+      "studentFile": "Assets/Tool solve programing/StudentCode/BaiLamHocSinh.cs",
+      "inputTypes": [
+        "int",
+        "int"
+      ],
+      "expectedType": "int",
+      "testCases": [
+        {
+          "name": "2 + 3 = 5",
+          "inputValues": [
+            "2",
+            "3"
+          ],
+          "expectedValue": "5"
+        },
+        {
+          "name": "-4 + 10 = 6",
+          "inputValues": [
+            "-4",
+            "10"
+          ],
+          "expectedValue": "6"
+        },
+        {
+          "name": "0 + 0 = 0",
+          "inputValues": [
+            "0",
+            "0"
+          ],
+          "expectedValue": "0"
+        }
+      ]
+    },
+    {
+      "id": "bai-2-tru-so-keo-da-an",
+      "title": "Bài 2 - Tính số kẹo còn lại",
+      "description": "input[0] là số kẹo ban đầu, input[1] là số kẹo đã ăn. Cả hai là int. Hãy tạo biến totalCandy, eatenCandy và trả về số kẹo còn lại bằng toán tử trừ.",
+      "testMode": "main",
+      "studentFile": "Assets/Tool solve programing/StudentCode/BaiLamHocSinh.cs",
+      "inputTypes": [
+        "int",
+        "int"
+      ],
+      "expectedType": "int",
+      "testCases": [
+        {
+          "name": "10 kẹo ăn 3 còn 7",
+          "inputValues": [
+            "10",
+            "3"
+          ],
+          "expectedValue": "7"
+        },
+        {
+          "name": "25 kẹo ăn 5 còn 20",
+          "inputValues": [
+            "25",
+            "5"
+          ],
+          "expectedValue": "20"
+        },
+        {
+          "name": "8 kẹo ăn 8 còn 0",
+          "inputValues": [
+            "8",
+            "8"
+          ],
+          "expectedValue": "0"
+        }
+      ]
+    },
+    {
+      "id": "bai-3-tinh-tien-mua-hang",
+      "title": "Bài 3 - Tính tiền mua hàng",
+      "description": "input[0] là giá của 1 món hàng, input[1] là số lượng. Cả hai là int. Hãy tạo biến price, quantity và trả về tổng tiền price * quantity.",
+      "testMode": "main",
+      "studentFile": "Assets/Tool solve programing/StudentCode/BaiLamHocSinh.cs",
+      "inputTypes": [
+        "int",
+        "int"
+      ],
+      "expectedType": "int",
+      "testCases": [
+        {
+          "name": "5 x 4 = 20",
+          "inputValues": [
+            "5",
+            "4"
+          ],
+          "expectedValue": "20"
+        },
+        {
+          "name": "12 x 3 = 36",
+          "inputValues": [
+            "12",
+            "3"
+          ],
+          "expectedValue": "36"
+        },
+        {
+          "name": "100 x 0 = 0",
+          "inputValues": [
+            "100",
+            "0"
+          ],
+          "expectedValue": "0"
+        }
+      ]
+    },
+    {
+      "id": "bai-4-chia-keo-deu",
+      "title": "Bài 4 - Chia kẹo đều cho bạn",
+      "description": "input[0] là tổng số kẹo, input[1] là số bạn. Cả hai là int. Hãy trả về số kẹo mỗi bạn nhận được bằng phép chia nguyên totalCandy / friendCount.",
+      "testMode": "main",
+      "studentFile": "Assets/Tool solve programing/StudentCode/BaiLamHocSinh.cs",
+      "inputTypes": [
+        "int",
+        "int"
+      ],
+      "expectedType": "int",
+      "testCases": [
+        {
+          "name": "12 kẹo chia 3 bạn",
+          "inputValues": [
+            "12",
+            "3"
+          ],
+          "expectedValue": "4"
+        },
+        {
+          "name": "20 kẹo chia 5 bạn",
+          "inputValues": [
+            "20",
+            "5"
+          ],
+          "expectedValue": "4"
+        },
+        {
+          "name": "7 kẹo chia 2 bạn lấy phần nguyên",
+          "inputValues": [
+            "7",
+            "2"
+          ],
+          "expectedValue": "3"
+        }
+      ]
+    },
+    {
+      "id": "bai-5-keo-con-du",
+      "title": "Bài 5 - Tính số kẹo còn dư",
+      "description": "input[0] là tổng số kẹo, input[1] là số bạn. Cả hai là int. Hãy trả về số kẹo còn dư sau khi chia đều bằng toán tử %.",
+      "testMode": "main",
+      "studentFile": "Assets/Tool solve programing/StudentCode/BaiLamHocSinh.cs",
+      "inputTypes": [
+        "int",
+        "int"
+      ],
+      "expectedType": "int",
+      "testCases": [
+        {
+          "name": "10 chia 3 dư 1",
+          "inputValues": [
+            "10",
+            "3"
+          ],
+          "expectedValue": "1"
+        },
+        {
+          "name": "20 chia 5 dư 0",
+          "inputValues": [
+            "20",
+            "5"
+          ],
+          "expectedValue": "0"
+        },
+        {
+          "name": "17 chia 4 dư 1",
+          "inputValues": [
+            "17",
+            "4"
+          ],
+          "expectedValue": "1"
+        }
+      ]
+    },
+    {
+      "id": "bai-6-chu-vi-hinh-chu-nhat",
+      "title": "Bài 6 - Tính chu vi hình chữ nhật",
+      "description": "input[0] là chiều dài, input[1] là chiều rộng. Cả hai là int. Hãy dùng hằng const int DOUBLE = 2 và trả về chu vi (length + width) * DOUBLE.",
+      "testMode": "main",
+      "studentFile": "Assets/Tool solve programing/StudentCode/BaiLamHocSinh.cs",
+      "inputTypes": [
+        "int",
+        "int"
+      ],
+      "expectedType": "int",
+      "testCases": [
+        {
+          "name": "Dài 5 rộng 3",
+          "inputValues": [
+            "5",
+            "3"
+          ],
+          "expectedValue": "16"
+        },
+        {
+          "name": "Dài 10 rộng 4",
+          "inputValues": [
+            "10",
+            "4"
+          ],
+          "expectedValue": "28"
+        },
+        {
+          "name": "Dài 1 rộng 1",
+          "inputValues": [
+            "1",
+            "1"
+          ],
+          "expectedValue": "4"
+        }
+      ]
+    },
+    {
+      "id": "bai-7-diem-sau-thuong-phat",
+      "title": "Bài 7 - Tính điểm sau thưởng phạt",
+      "description": "input[0] là điểm ban đầu, input[1] là số điểm bị trừ. Cả hai là int. Hãy dùng hằng const int BONUS = 10 và trả về baseScore + BONUS - penalty.",
+      "testMode": "main",
+      "studentFile": "Assets/Tool solve programing/StudentCode/BaiLamHocSinh.cs",
+      "inputTypes": [
+        "int",
+        "int"
+      ],
+      "expectedType": "int",
+      "testCases": [
+        {
+          "name": "50 + 10 - 5",
+          "inputValues": [
+            "50",
+            "5"
+          ],
+          "expectedValue": "55"
+        },
+        {
+          "name": "20 + 10 - 0",
+          "inputValues": [
+            "20",
+            "0"
+          ],
+          "expectedValue": "30"
+        },
+        {
+          "name": "100 + 10 - 15",
+          "inputValues": [
+            "100",
+            "15"
+          ],
+          "expectedValue": "95"
+        }
+      ]
+    },
+    {
+      "id": "bai-8-kinh-nghiem-sau-nhiem-vu",
+      "title": "Bài 8 - Tính kinh nghiệm sau nhiệm vụ",
+      "description": "input[0] là kinh nghiệm hiện tại, input[1] là số nhiệm vụ đã làm. Cả hai là int. Mỗi nhiệm vụ cộng 20 điểm kinh nghiệm. Hãy dùng hằng const int EXP_PER_QUEST = 20 và trả về currentExp + questCount * EXP_PER_QUEST.",
+      "testMode": "main",
+      "studentFile": "Assets/Tool solve programing/StudentCode/BaiLamHocSinh.cs",
+      "inputTypes": [
+        "int",
+        "int"
+      ],
+      "expectedType": "int",
+      "testCases": [
+        {
+          "name": "0 exp, 1 nhiệm vụ",
+          "inputValues": [
+            "0",
+            "1"
+          ],
+          "expectedValue": "20"
+        },
+        {
+          "name": "50 exp, 3 nhiệm vụ",
+          "inputValues": [
+            "50",
+            "3"
+          ],
+          "expectedValue": "110"
+        },
+        {
+          "name": "100 exp, 0 nhiệm vụ",
+          "inputValues": [
+            "100",
+            "0"
+          ],
+          "expectedValue": "100"
+        }
+      ]
+    },
+    {
+      "id": "bai-9-kiem-tra-so-chan",
+      "title": "Bài 9 - Kiểm tra số chẵn",
+      "description": "input[0] là một số nguyên int. Hãy tạo biến number và trả về kết quả number % 2 == 0. Không dùng if.",
+      "testMode": "main",
+      "studentFile": "Assets/Tool solve programing/StudentCode/BaiLamHocSinh.cs",
+      "inputTypes": [
+        "int"
+      ],
+      "expectedType": "bool",
+      "testCases": [
+        {
+          "name": "2 là số chẵn",
+          "inputValues": [
+            "2"
+          ],
+          "expectedValue": "True"
+        },
+        {
+          "name": "7 không phải số chẵn",
+          "inputValues": [
+            "7"
+          ],
+          "expectedValue": "False"
+        },
+        {
+          "name": "0 là số chẵn",
+          "inputValues": [
+            "0"
+          ],
+          "expectedValue": "True"
+        }
+      ]
+    },
+    {
+      "id": "bai-10-du-dieu-kien-mo-ruong",
+      "title": "Bài 10 - Đủ điều kiện mở rương",
+      "description": "input[0] là level, input[1] là số xu. Cả hai là int. Người chơi mở được rương khi level >= 5 và coins >= 100. Hãy dùng hằng const int REQUIRED_LEVEL = 5, const int REQUIRED_COINS = 100 và trả về biểu thức so sánh kết hợp bằng toán tử &&. Không dùng if.",
+      "testMode": "main",
+      "studentFile": "Assets/Tool solve programing/StudentCode/BaiLamHocSinh.cs",
+      "inputTypes": [
+        "int",
+        "int"
+      ],
+      "expectedType": "bool",
+      "testCases": [
+        {
+          "name": "Level 5, 100 xu: đủ",
+          "inputValues": [
+            "5",
+            "100"
+          ],
+          "expectedValue": "True"
+        },
+        {
+          "name": "Level 4, 100 xu: thiếu level",
+          "inputValues": [
+            "4",
+            "100"
+          ],
+          "expectedValue": "False"
+        },
+        {
+          "name": "Level 6, 90 xu: thiếu xu",
+          "inputValues": [
+            "6",
+            "90"
+          ],
+          "expectedValue": "False"
+        }
+      ]
+    }
+  ]
+}
