@@ -52,9 +52,9 @@ public sealed class SolveProgrammingWindow : EditorWindow
         pageScroll = EditorGUILayout.BeginScrollView(pageScroll);
         try
         {
-            if (EditorApplication.isCompiling)
+            if (IsUnityBusy())
             {
-                EditorGUILayout.HelpBox("Unity đang compile. Vui lòng đợi xong rồi bấm Test.", MessageType.Info);
+                EditorGUILayout.HelpBox("Unity đang refresh/compile. Vui lòng đợi xong rồi bấm Test.", MessageType.Info);
             }
 
             if (exercises.Count == 0)
@@ -287,7 +287,7 @@ public sealed class SolveProgrammingWindow : EditorWindow
 
     private void DrawPrimaryTestButton()
     {
-        GUI.enabled = !EditorApplication.isCompiling;
+        GUI.enabled = !IsUnityBusy();
 
         var oldColor = GUI.backgroundColor;
         GUI.backgroundColor = new Color(0.55f, 0.8f, 1f);
@@ -610,14 +610,21 @@ public sealed class SolveProgrammingWindow : EditorWindow
     {
         testResults.Clear();
 
-        if (EditorApplication.isCompiling)
+        AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+
+        if (IsUnityBusy())
         {
-            SetStatus(ResultState.Waiting, "Unity đang compile. Đợi Unity compile xong rồi bấm Test lại.");
+            SetStatus(ResultState.Waiting, "Unity đang refresh/compile. Đợi Unity xong rồi bấm Test lại.");
             return;
         }
 
         SetStatus(ResultState.Waiting, "Đang chạy test...");
         RunSelectedExercise();
+    }
+
+    private static bool IsUnityBusy()
+    {
+        return EditorApplication.isCompiling || EditorApplication.isUpdating;
     }
 
     private void RunSelectedExercise()
@@ -704,9 +711,17 @@ public sealed class SolveProgrammingWindow : EditorWindow
             return;
         }
 
+        var sourceHasMain = SourceHasMainMethodSignature(scriptPath);
         var mainMethod = FindMainMethod(scriptPath, exercise.mainClass);
         if (mainMethod == null)
         {
+            if (sourceHasMain)
+            {
+                AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+                SetStatus(ResultState.Waiting, "Đã thấy hàm Main trong file nhưng Unity chưa compile kịp. Đợi Unity compile xong rồi bấm Test lại.");
+                return;
+            }
+
             SetStatus(ResultState.Fail, "Không tìm thấy hàm public static object Main(List<object> input) trong file: " + scriptPath);
             return;
         }
@@ -1019,6 +1034,20 @@ public sealed class SolveProgrammingWindow : EditorWindow
         }
 
         return null;
+    }
+
+    private static bool SourceHasMainMethodSignature(string scriptPath)
+    {
+        if (!File.Exists(scriptPath))
+        {
+            return false;
+        }
+
+        var source = File.ReadAllText(scriptPath);
+        return Regex.IsMatch(
+            source,
+            @"\bpublic\s+static\s+object\s+Main\s*\(\s*(?:System\.Collections\.Generic\.)?List\s*<\s*object\s*>\s+input\s*\)",
+            RegexOptions.CultureInvariant);
     }
 
     private static HashSet<string> GetCandidateTypeNames(string scriptPath, string explicitClassName)
