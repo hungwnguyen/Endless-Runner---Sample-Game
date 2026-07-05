@@ -340,7 +340,8 @@ public sealed class SolveProgrammingWindow : EditorWindow
             Directory.CreateDirectory(directory);
         }
 
-        File.WriteAllText(assetPath, BuildStudentTemplate(exercise));
+        var className = BuildSafeClassNameFromPath(assetPath);
+        File.WriteAllText(assetPath, BuildStudentTemplate(exercise, className));
         AssetDatabase.ImportAsset(assetPath);
         AssetDatabase.Refresh();
 
@@ -391,14 +392,31 @@ public sealed class SolveProgrammingWindow : EditorWindow
         return (path ?? "").Replace('\\', '/');
     }
 
-    private static string BuildStudentTemplate(ExerciseDefinition exercise)
+    private static string BuildSafeClassNameFromPath(string assetPath)
+    {
+        var fileName = Path.GetFileNameWithoutExtension(assetPath);
+        var className = Regex.Replace(fileName ?? "", @"[^A-Za-z0-9_]", "_");
+        if (string.IsNullOrWhiteSpace(className))
+        {
+            className = "BaiLamHocSinh";
+        }
+
+        if (!char.IsLetter(className[0]) && className[0] != '_')
+        {
+            className = "BaiLamHocSinh_" + className;
+        }
+
+        return className;
+    }
+
+    private static string BuildStudentTemplate(ExerciseDefinition exercise, string className)
     {
         var inputTypes = exercise.inputTypes ?? Array.Empty<string>();
         var lines = new List<string>
         {
             "using System.Collections.Generic;",
             "",
-            "public static class Program",
+            "public static class " + className,
             "{",
             "    public static object Main(List<object> input)",
             "    {",
