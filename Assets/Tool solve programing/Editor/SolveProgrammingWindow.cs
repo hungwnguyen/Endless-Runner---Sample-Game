@@ -17,11 +17,18 @@ public sealed class SolveProgrammingWindow : EditorWindow
     private readonly List<ExerciseDefinition> exercises = new List<ExerciseDefinition>();
     private readonly List<TestResult> testResults = new List<TestResult>();
 
+    private Vector2 pageScroll;
     private Vector2 scroll;
     private int selectedExerciseIndex;
     private MonoScript selectedStudentScript;
     private string statusMessage = "Chọn bài tập và bấm Test.";
     private ResultState resultState = ResultState.None;
+    private GUIStyle titleStyle;
+    private GUIStyle sectionTitleStyle;
+    private GUIStyle wrappedTextStyle;
+    private GUIStyle cardStyle;
+    private GUIStyle smallLabelStyle;
+    private GUIStyle valueTextStyle;
 
     [MenuItem("Tools/Solve Programming/Test Hoc Sinh")]
     public static void Open()
@@ -31,6 +38,7 @@ public sealed class SolveProgrammingWindow : EditorWindow
 
     private void OnEnable()
     {
+        minSize = new Vector2(420f, 360f);
         LoadExercises();
         RestoreSelection();
         RestoreStudentScript();
@@ -38,28 +46,37 @@ public sealed class SolveProgrammingWindow : EditorWindow
 
     private void OnGUI()
     {
+        EnsureStyles();
         DrawToolbar();
 
-        if (EditorApplication.isCompiling)
+        pageScroll = EditorGUILayout.BeginScrollView(pageScroll);
+        try
         {
-            EditorGUILayout.HelpBox("Unity đang compile. Vui lòng đợi xong rồi bấm Test.", MessageType.Info);
-        }
-
-        if (exercises.Count == 0)
-        {
-            EditorGUILayout.HelpBox("Chưa có bài tập JSON trong Assets/Tool solve programing/Exercises.", MessageType.Warning);
-            if (GUILayout.Button("Reload bài tập"))
+            if (EditorApplication.isCompiling)
             {
-                LoadExercises();
+                EditorGUILayout.HelpBox("Unity đang compile. Vui lòng đợi xong rồi bấm Test.", MessageType.Info);
             }
-            return;
-        }
 
-        DrawExercisePicker();
-        DrawExerciseDetails();
-        DrawActionButtons();
-        DrawStatus();
-        DrawTestResults();
+            if (exercises.Count == 0)
+            {
+                EditorGUILayout.HelpBox("Chưa có bài tập JSON trong Assets/Tool solve programing/Exercises.", MessageType.Warning);
+                if (GUILayout.Button("Reload bài tập"))
+                {
+                    LoadExercises();
+                }
+                return;
+            }
+
+            DrawExercisePicker();
+            DrawExerciseDetails();
+            DrawActionButtons();
+            DrawStatus();
+            DrawTestResults();
+        }
+        finally
+        {
+            EditorGUILayout.EndScrollView();
+        }
     }
 
     private void DrawToolbar()
@@ -79,15 +96,18 @@ public sealed class SolveProgrammingWindow : EditorWindow
 
     private void DrawExercisePicker()
     {
-        var titles = exercises.Select(exercise => exercise.title).ToArray();
-        var newIndex = EditorGUILayout.Popup("Bài tập", selectedExerciseIndex, titles);
-        if (newIndex != selectedExerciseIndex)
+        using (new EditorGUILayout.VerticalScope(cardStyle))
         {
-            selectedExerciseIndex = newIndex;
-            EditorPrefs.SetString(LastExerciseKey, exercises[selectedExerciseIndex].id);
-            testResults.Clear();
-            RestoreStudentScript();
-            SetStatus(ResultState.None, "Đã chọn bài tập. Bấm Test để kiểm tra.");
+            var titles = exercises.Select(exercise => exercise.title).ToArray();
+            var newIndex = EditorGUILayout.Popup("Bài tập", selectedExerciseIndex, titles);
+            if (newIndex != selectedExerciseIndex)
+            {
+                selectedExerciseIndex = newIndex;
+                EditorPrefs.SetString(LastExerciseKey, exercises[selectedExerciseIndex].id);
+                testResults.Clear();
+                RestoreStudentScript();
+                SetStatus(ResultState.None, "Đã chọn bài tập. Bấm Test để kiểm tra.");
+            }
         }
     }
 
@@ -96,25 +116,25 @@ public sealed class SolveProgrammingWindow : EditorWindow
         var exercise = exercises[selectedExerciseIndex];
 
         EditorGUILayout.Space(8);
-        EditorGUILayout.LabelField(exercise.title, EditorStyles.boldLabel);
-        EditorGUILayout.LabelField(exercise.description, EditorStyles.boldLabel);
-
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        using (new EditorGUILayout.VerticalScope(cardStyle))
         {
+            EditorGUILayout.LabelField(exercise.title, titleStyle);
+            DrawWrappedText(exercise.description, wrappedTextStyle, 12f);
+
+            EditorGUILayout.Space(8);
+            DrawSectionTitle("Thông tin bài");
             if (IsMainExercise(exercise))
             {
-                EditorGUILayout.LabelField("Kiểu test", "Main + List<object> input");
-                EditorGUILayout.LabelField("Hàm cần có", "public static object Main(List<object> input)");
-                EditorGUILayout.LabelField("Kiểu dữ liệu input", exercise.inputTypes == null ? "" : string.Join(", ", exercise.inputTypes));
-                EditorGUILayout.LabelField("Kiểu dữ liệu kết quả", exercise.expectedType);
+                DrawInfoRow("Kiểu input", exercise.inputTypes == null ? "" : string.Join(", ", exercise.inputTypes));
+                DrawInfoRow("Kiểu output", exercise.expectedType);
             }
             else
             {
-                EditorGUILayout.LabelField("Class", exercise.studentClass);
-                EditorGUILayout.LabelField("Hàm cần làm", BuildMethodSignature(exercise));
+                DrawInfoRow("Class", exercise.studentClass);
+                DrawInfoRow("Hàm cần làm", BuildMethodSignature(exercise));
             }
 
-            EditorGUILayout.LabelField("File học sinh", string.IsNullOrWhiteSpace(exercise.studentFile) ? DefaultStudentFile : exercise.studentFile);
+            DrawSampleInputOutput(exercise);
         }
 
         if (IsMainExercise(exercise))
@@ -123,59 +143,197 @@ public sealed class SolveProgrammingWindow : EditorWindow
         }
     }
 
+    private void DrawSampleInputOutput(ExerciseDefinition exercise)
+    {
+        var testCase = exercise.testCases == null ? null : exercise.testCases.FirstOrDefault();
+        if (testCase == null)
+        {
+            return;
+        }
+
+        EditorGUILayout.Space(8);
+        DrawSectionTitle("Input / Output mẫu");
+
+        var inputText = GetSampleInputText(exercise, testCase);
+        var outputText = testCase.expectedValue ?? testCase.expected ?? "";
+
+        if (position.width < 540f)
+        {
+            DrawSampleBox("Input", inputText);
+            DrawSampleBox("Output", outputText);
+            return;
+        }
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            DrawSampleBox("Input", inputText);
+            DrawSampleBox("Output", outputText);
+        }
+    }
+
+    private void DrawSampleBox(string label, string value)
+    {
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.MinWidth(0f)))
+        {
+            EditorGUILayout.LabelField(label, smallLabelStyle);
+            var availableWidth = position.width < 540f ? position.width - 72f : (position.width - 96f) * 0.5f;
+            DrawWrappedText(value, valueTextStyle, 8f, availableWidth);
+        }
+    }
+
+    private static string GetSampleInputText(ExerciseDefinition exercise, ExerciseTestCase testCase)
+    {
+        if (IsMainExercise(exercise))
+        {
+            return testCase.inputValues == null ? "" : "[" + string.Join(", ", testCase.inputValues) + "]";
+        }
+
+        return testCase.args == null ? "" : string.Join(", ", testCase.args);
+    }
+
+    private void DrawSectionTitle(string text)
+    {
+        EditorGUILayout.LabelField(text, sectionTitleStyle);
+    }
+
+    private void DrawInfoRow(string label, string value)
+    {
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            var labelWidth = Mathf.Clamp(position.width * 0.28f, 96f, 150f);
+            EditorGUILayout.LabelField(label, smallLabelStyle, GUILayout.Width(labelWidth));
+            DrawWrappedText(value, valueTextStyle, 0f, position.width - labelWidth - 64f);
+        }
+    }
+
+    private static void DrawWrappedText(string text, GUIStyle style, float extraHeight, float widthOverride = -1f)
+    {
+        var safeText = string.IsNullOrEmpty(text) ? "-" : text;
+        var width = Mathf.Max(100f, widthOverride > 0f ? widthOverride : EditorGUIUtility.currentViewWidth - 54f);
+        var height = Mathf.Max(EditorGUIUtility.singleLineHeight, style.CalcHeight(new GUIContent(safeText), width)) + extraHeight;
+        EditorGUILayout.LabelField(safeText, style, GUILayout.Height(height), GUILayout.ExpandWidth(true));
+    }
+
+    private void EnsureStyles()
+    {
+        if (titleStyle != null)
+        {
+            return;
+        }
+
+        titleStyle = new GUIStyle(EditorStyles.boldLabel)
+        {
+            fontSize = 14,
+            wordWrap = true,
+            padding = new RectOffset(0, 0, 2, 4)
+        };
+
+        sectionTitleStyle = new GUIStyle(EditorStyles.boldLabel)
+        {
+            wordWrap = true,
+            normal = { textColor = EditorGUIUtility.isProSkin ? new Color(0.8f, 0.9f, 1f) : new Color(0.1f, 0.28f, 0.42f) }
+        };
+
+        wrappedTextStyle = new GUIStyle(EditorStyles.wordWrappedLabel)
+        {
+            wordWrap = true,
+            richText = false,
+            padding = new RectOffset(0, 0, 2, 2)
+        };
+
+        cardStyle = new GUIStyle(EditorStyles.helpBox)
+        {
+            padding = new RectOffset(12, 12, 10, 10),
+            margin = new RectOffset(8, 8, 6, 6)
+        };
+
+        smallLabelStyle = new GUIStyle(EditorStyles.miniBoldLabel)
+        {
+            wordWrap = true,
+            normal = { textColor = EditorGUIUtility.isProSkin ? new Color(0.82f, 0.82f, 0.82f) : new Color(0.22f, 0.22f, 0.22f) }
+        };
+
+        valueTextStyle = new GUIStyle(EditorStyles.wordWrappedLabel)
+        {
+            wordWrap = true,
+            padding = new RectOffset(0, 0, 1, 1),
+            normal = { textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black }
+        };
+    }
+
     private void DrawActionButtons()
     {
         var exercise = exercises[selectedExerciseIndex];
 
+        if (position.width < 520f)
+        {
+            DrawPrimaryTestButton();
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                DrawTemplateButton(exercise, true);
+                DrawOpenStudentFileButton(exercise, true);
+            }
+            return;
+        }
+
         using (new EditorGUILayout.HorizontalScope())
         {
-            GUI.enabled = !EditorApplication.isCompiling;
+            DrawPrimaryTestButton();
+            DrawTemplateButton(exercise, false);
+            DrawOpenStudentFileButton(exercise, false);
+        }
+    }
 
-            var oldColor = GUI.backgroundColor;
-            GUI.backgroundColor = new Color(0.55f, 0.8f, 1f);
-            if (GUILayout.Button("Test", GUILayout.Height(34)))
-            {
-                StartCheck();
-            }
-            GUI.backgroundColor = oldColor;
+    private void DrawPrimaryTestButton()
+    {
+        GUI.enabled = !EditorApplication.isCompiling;
 
-            GUI.enabled = true;
+        var oldColor = GUI.backgroundColor;
+        GUI.backgroundColor = new Color(0.55f, 0.8f, 1f);
+        if (GUILayout.Button("Test", GUILayout.Height(34), GUILayout.ExpandWidth(true)))
+        {
+            StartCheck();
+        }
+        GUI.backgroundColor = oldColor;
 
-            if (GUILayout.Button("Tạo code mẫu", GUILayout.Height(34), GUILayout.Width(130)))
-            {
-                CreateStudentTemplate(exercise);
-            }
+        GUI.enabled = true;
+    }
 
-            if (GUILayout.Button("Mở file học sinh", GUILayout.Height(34), GUILayout.Width(140)))
-            {
-                OpenStudentFile(exercise);
-            }
+    private void DrawTemplateButton(ExerciseDefinition exercise, bool expand)
+    {
+        var options = expand
+            ? new[] { GUILayout.Height(34), GUILayout.ExpandWidth(true) }
+            : new[] { GUILayout.Height(34), GUILayout.Width(130) };
+
+        if (GUILayout.Button("Tạo code mẫu", options))
+        {
+            CreateStudentTemplate(exercise);
+        }
+    }
+
+    private void DrawOpenStudentFileButton(ExerciseDefinition exercise, bool expand)
+    {
+        var options = expand
+            ? new[] { GUILayout.Height(34), GUILayout.ExpandWidth(true) }
+            : new[] { GUILayout.Height(34), GUILayout.Width(140) };
+
+        if (GUILayout.Button("Mở file học sinh", options))
+        {
+            OpenStudentFile(exercise);
         }
     }
 
     private void CreateStudentTemplate(ExerciseDefinition exercise)
     {
-        var assetPath = string.IsNullOrWhiteSpace(exercise.studentFile) ? DefaultStudentFile : exercise.studentFile;
-        if (!assetPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+        var referencePath = string.IsNullOrWhiteSpace(exercise.studentFile) ? DefaultStudentFile : exercise.studentFile;
+        if (!referencePath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
         {
             SetStatus(ResultState.Fail, "Đường dẫn file học sinh phải nằm trong thư mục Assets.");
             return;
         }
 
-        if (File.Exists(assetPath))
-        {
-            var overwrite = EditorUtility.DisplayDialog(
-                "Tạo code mẫu",
-                "File học sinh đã tồn tại:\n" + assetPath + "\n\nBạn có muốn ghi đè bằng code mẫu mới không?",
-                "Ghi đè",
-                "Hủy");
-
-            if (!overwrite)
-            {
-                return;
-            }
-        }
-
+        var assetPath = BuildNextStudentTemplatePath(referencePath);
         var directory = Path.GetDirectoryName(assetPath);
         if (!string.IsNullOrEmpty(directory))
         {
@@ -189,8 +347,48 @@ public sealed class SolveProgrammingWindow : EditorWindow
         selectedStudentScript = AssetDatabase.LoadAssetAtPath<MonoScript>(assetPath);
         SaveSelectedStudentScript();
         testResults.Clear();
-        SetStatus(ResultState.None, "Đã tạo code mẫu. Học sinh chỉ cần viết code bên trong hàm Main rồi bấm Test.");
-        OpenStudentFile(exercise);
+        SetStatus(ResultState.None, "Đã tạo code mẫu mới: " + assetPath + ". Học sinh chỉ cần viết code bên trong hàm Main rồi bấm Test.");
+        OpenStudentFileAtPath(assetPath);
+    }
+
+    private static string BuildNextStudentTemplatePath(string referencePath)
+    {
+        var directory = Path.GetDirectoryName(referencePath);
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            directory = Path.GetDirectoryName(DefaultStudentFile);
+        }
+
+        var fileCount = Directory.Exists(directory)
+            ? Directory.GetFiles(directory, "*.cs", SearchOption.TopDirectoryOnly).Length
+            : 0;
+
+        var baseName = RemoveTrailingDigits(Path.GetFileNameWithoutExtension(referencePath));
+        if (string.IsNullOrWhiteSpace(baseName))
+        {
+            baseName = "BaiLamHocSinh";
+        }
+
+        var index = fileCount + 1;
+        string candidatePath;
+        do
+        {
+            candidatePath = NormalizeAssetPath(Path.Combine(directory, baseName + index + ".cs"));
+            index++;
+        }
+        while (File.Exists(candidatePath));
+
+        return candidatePath;
+    }
+
+    private static string RemoveTrailingDigits(string value)
+    {
+        return Regex.Replace(value ?? "", @"\d+$", "");
+    }
+
+    private static string NormalizeAssetPath(string path)
+    {
+        return (path ?? "").Replace('\\', '/');
     }
 
     private static string BuildStudentTemplate(ExerciseDefinition exercise)
@@ -1023,6 +1221,11 @@ public sealed class SolveProgrammingWindow : EditorWindow
     private static void OpenStudentFile(ExerciseDefinition exercise)
     {
         var path = string.IsNullOrWhiteSpace(exercise.studentFile) ? DefaultStudentFile : exercise.studentFile;
+        OpenStudentFileAtPath(path);
+    }
+
+    private static void OpenStudentFileAtPath(string path)
+    {
         var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
         if (asset != null)
         {
